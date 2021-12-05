@@ -6,35 +6,43 @@ public class CubeMovement : MonoBehaviour {
     private Stack<Command> Commands = new Stack<Command>();
 
     public GameObject PostPro;
+
+    public float TimeStart, TimeCadence;
+
+    public AudioSource musique;
+
+    private bool Rewind = false;
     
     private void Update() {
-        if (Input.GetKeyDown(KeyCode.Z)) {
+        if (Input.GetKeyDown(KeyCode.Z) && Rewind == false) {
             Command command = new Forward(transform);
             command.Do();
             Commands.Push(command);
         }
         
-        if (Input.GetKeyDown(KeyCode.S)) {
+        if (Input.GetKeyDown(KeyCode.S) && Rewind == false) {
             Command command = new Backward(transform);
             command.Do();
             Commands.Push(command);
         }
         
-        if (Input.GetKeyDown(KeyCode.Q)) {
+        if (Input.GetKeyDown(KeyCode.Q) && Rewind == false) {
             Command command = new Left(transform);
             command.Do();
             Commands.Push(command);
         }
         
-        if (Input.GetKeyDown(KeyCode.D)) {
+        if (Input.GetKeyDown(KeyCode.D) && Rewind == false) {
             Command command = new Right(transform);
             command.Do();
             Commands.Push(command);
         }
         
-        if (Input.GetButtonDown("Jump"))
+        if (Input.GetButtonDown("Jump") && Rewind == false && Commands.Count > 0)
         {
-            Invoke("TimeMachine", 0.1f);
+            musique.pitch = -1;
+            Rewind = true;
+            Invoke("TimeMachine", TimeStart);
             PostPro.gameObject.SetActive(true);
         }
         
@@ -48,11 +56,18 @@ public class CubeMovement : MonoBehaviour {
 
     public void TimeMachine()
     {
+        TimeStart -= 0.1f ;
         Command command = Commands.Pop();
         command.Undo();
-        Invoke(nameof(TimeMachine), 0.5f);
+        Invoke(nameof(TimeMachine), TimeStart);
+
+        if (TimeStart <= 0.2f) TimeStart = 0.2f;
+        
         if (Commands.Count == 0)
         {
+            musique.pitch = 1;
+            TimeStart = TimeCadence;
+            Rewind = false;
             PostPro.gameObject.SetActive(false);
             CancelInvoke();
         }
